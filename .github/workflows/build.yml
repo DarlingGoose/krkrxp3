@@ -1,0 +1,40 @@
+name: Build Go Binary
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Go environment
+      uses: actions/setup-go@v5
+      with:
+        go-version: 'stable'
+        cache: true # 啟用快取，下次編譯時會自動跳過已下載的套件，速度極快
+
+    - name: Build Windows Binary
+      env:
+        GOOS: windows
+        GOARCH: amd64
+        CGO_ENABLED: 0 # 強制關閉 CGO，確保純 Go 交叉編譯絕對成功
+      run: |
+        go build -o krkrxp3.exe -ldflags="-s -w"
+
+    - name: Archive production artifacts
+      run: |
+        zip krkrxp3-windows.zip krkrxp3.exe
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: krkrxp3-windows-binary
+        path: krkrxp3-windows.zip
